@@ -27,6 +27,9 @@
       - [Plan for desktop client deployment](#plan-for-desktop-client-deployment)
         - [Clients](#clients)
         - [Workspaces](#workspaces)
+  - [Business continuity and disaster recovery](#business-continuity-and-disaster-recovery)
+    - [BCDR plan](#bcdr-plan)
+      - [Host pools](#host-pools)
 
 ## Plan Azure Virtual Desktop implementation
 
@@ -211,3 +214,29 @@ App Attach doesn't have specific dependencies on the type of storage fabric that
 ##### Workspaces
 
 ![AVD workspaces](../../images/msLearn/image-msLearn-azure-virtual-desktop-workspaces.png)
+
+## Business continuity and disaster recovery
+
+### BCDR plan
+
+- Region pairing
+
+- Availability set
+
+  ![Availability set](../../images/msLearn/image-msLearn-azure-virtual-desktop-availability-sets.png)
+
+- Availability zones
+
+  ![Availability zones](../../images/msLearn/image-msLearn-azure-virtual-desktop-availability-zones.png)
+
+- Azure Site Recovery
+
+  ![Azure Site Recovery](../../images/msLearn/image-msLearn-azure-virtual-desktop-site-recovery.png)
+
+#### Host pools
+
+Can be configured in active-active or active-passive configurations.
+
+- **Active-active:** With an active-active configuration, a single host pool can have VMs from multiple regions. You must combine cloud cache features to actively replicate a user's FSLogix profile across storage in multiple regions. For MSIX app attach, use another copy on an additional file share in the other region. VMs in each region should contain the Cloud cache registry to specify the locations. Additionally, you must configure the Group Policies to give precedence to the local storage location. This Azure Virtual Desktop deployment provides the highest efficiency from a user perspective. This is because if there's a failure, users in the remaining region can continue to use the service without having to sign in again. However, this configuration is more costly and more complex to deploy and isn't optimized for performance.
+
+- **Active-passive:** For an active-passive configuration, you can use Azure Site Recovery to replicate your VMs in the secondary region with your domain controllers. If you use Azure Site Recovery, you don't need to register the VMs manually. Instead, the Azure Virtual Desktop agent in the secondary VM automatically uses the latest security token to connect to the service instance closest to it. This ensures that your session host joins the host pool automatically, and the user needs to reconnect only to access their VMs. For this configuration, you can also create a secondary host pool (known as a hot standby) in the failover region with all the resources turned off. You can then use a recovery plan in Azure Site Recovery to turn on host pools and create an orchestrated process. You also need to create a new application group in the failover region and assign users to them.
