@@ -27,6 +27,23 @@
         - [Windows](#windows)
       - [Simplify manual enrollment](#simplify-manual-enrollment)
         - [CNAME records](#cname-records)
+  - [Configure profiles for users and devices](#configure-profiles-for-users-and-devices)
+    - [Oversee device profiles](#oversee-device-profiles)
+      - [Manage device sync in Intune](#manage-device-sync-in-intune)
+    - [Maintain user profile](#maintain-user-profile)
+      - [Examine user profile](#examine-user-profile)
+        - [Profile extension for each Windows version](#profile-extension-for-each-windows-version)
+        - [Sync user state with Enterprise State Roaming](#sync-user-state-with-enterprise-state-roaming)
+  - [Examine application management](#examine-application-management)
+    - [Execute mobile application management](#execute-mobile-application-management)
+      - [Examine mobile application management](#examine-mobile-application-management)
+        - [Supported platforms for app protection policies](#supported-platforms-for-app-protection-policies)
+    - [Deploy and update applications](#deploy-and-update-applications)
+      - [Deploy applications with Intune](#deploy-applications-with-intune)
+        - [Microsoft Intune app lifecycle](#microsoft-intune-app-lifecycle)
+    - [Add apps to Intune](#add-apps-to-intune)
+    - [Manage Win32 apps with Intune](#manage-win32-apps-with-intune)
+    - [Assign apps to company employees](#assign-apps-to-company-employees)
 
 ## Explore endpoint management
 
@@ -228,3 +245,125 @@ If you don't have Microsoft Entra ID P1 or P2, you can create a domain name serv
 |----------|--------------------------------------|-----------------------------------------------|------------------------|
 | CNAME    | `EnterpriseEnrollment.contoso.com`   | `EnterpriseEnrollment-s.manage.microsoft.com` | 1 hour                 |
 | CNAME    | `EnterpriseRegistration.contoso.com` | `EnterpriseRegistration.windows.net`          | 1 hour                 |
+
+## Configure profiles for users and devices
+
+### Oversee device profiles
+
+#### Manage device sync in Intune
+
+When a policy or an app is deployed, Intune immediately begins notifying the device to check in with the Intune service. This step typically takes less than five minutes.
+
+If a device doesn't check in to get the policy after the first notification is sent, Intune makes three more attempts. If the device is offline (such as being turned off, or not connected to a network), it might not receive the notifications. In this case, the device gets the policy on its next scheduled check-in with the Intune service, as follows:
+
+| **Platform** | **Check-in frequency** |
+|--------------|------------------------|
+| iOS          | Every 6 hours          |
+| macOS        | Every 6 hours          |
+| Android      | Every 8 hours          |
+| Windows 11   | Every 8 hours          |
+
+If the device recently enrolled, the check-in frequency is more frequent, as follows:
+
+| **Platform**                      | **Check-in frequency**                                                                    |
+|-----------------------------------|-------------------------------------------------------------------------------------------|
+| iOS                               | Every 15 minutes for 6 hours, and then every 6 hours                                      |
+| macOS                             | Every 15 minutes for 6 hours, and then every 6 hours                                      |
+| Android                           | Every 3 minutes for 15 minutes, then every 15 minutes for 2 hours, and then every 8 hours |
+| Windows PCs (enrolled as devices) | Every 3 minutes for 30 minutes, and then every 8 hours                                    |
+
+### Maintain user profile
+
+#### Examine user profile
+
+User state consists of four main data categories, including:
+
+| **Category**     | **Description**                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+|------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| User settings    | This component describes all settings that a user has personalized after the operating system was installed.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| User registry    | This is the part of a computer’s registry that is specific to each user. Registry hive HKEY_CURRENT_USER (HKCU) stores settings that are specific to the currently signed-in user. The HKCU registry key is a link to the HKEY_USERS subkey that corresponds to the user. The same information is accessible in both locations. On computers that run Windows, each user's settings are stored in their own files, named NTUSER.DAT. These files are in the Users folder on the boot volume. Settings in the HKCU hive follow users with a roaming profile from device to device.                                                                                                                         |
+| Application Data | The AppData folder, short for Application Data, is part of user state. This folder contains mostly application settings that are specific to a user. For example, if a user installs Microsoft Word 2016 and personalizes settings to fit their needs, such as adjusting toolbars, proofing, or language settings, Word 2016 stores these settings in the AppData folder. All well-designed applications should store their data in the AppData folder. However, it’s not possible to enforce this, and it’s entirely up to the developer to decide where an application stores its data. AppData folder provides a high degree of separation for user-related and computer-related application settings. |
+| User data        | This component contains all user-specific data, such as files, which are stored in multiple user profile sub-folders, such as Documents, Favorites, Pictures, and Music. Users can change this location and store their data in any other folder to which they have Write permissions. However, by default, user data is stored in the individual user profile.                                                                                                                                                                                                                                                                                                                                           |
+
+##### Profile extension for each Windows version
+
+| **Client operating system version**                              | **Server operating system version**         | **Profile extension** |
+|------------------------------------------------------------------|---------------------------------------------|-----------------------|
+| Windows 10, versions 1507 and 1511                               | N/A                                         | V5                    |
+| Windows 10, versions 1607, 1703, 1709, 1803, 1809, 1903 and 1909 | Windows Server 2016 and Windows Server 2019 | V6                    |
+
+##### Sync user state with Enterprise State Roaming
+
+Enterprise State Roaming can sync only settings and not data. However, you should note that Enterprise State Roaming can only sync the settings of the Universal Windows Platform (UWP) apps and Windows settings, and that it can't sync desktop-application settings. You can use the Settings app, Group Policy or mobile device management (MDM) to control which settings will be synced.
+
+![Enterprise State Roaming](../../images/msLearn/image-msLearn-enterprise-state-roaming.png)
+
+## Examine application management
+
+### Execute mobile application management
+
+#### Examine mobile application management
+
+Intune MAM supports two configurations:
+
+- **Intune MDM + MAM:** IT administrators can only manage apps using MAM and app protection policies on devices that are enrolled with Intune MDM.
+- **MAM without device enrollment:** MAM without device enrollment (MAM-WE) allows IT administrators to manage apps using MAM and app protection policies on devices not enrolled with Intune MDM. This means apps can be managed by Intune on devices enrolled with third-party Enterprise Mobility Management (EMM) providers. Also, apps can be managed by Intune on devices enrolled with third-party EMM providers or not enrolled with an MDM at all.
+
+##### Supported platforms for app protection policies
+
+App protection policies are only supported by Android and iOS. When you enroll Windows devices with Intune, you can use Windows Information Protection, which offers similar functionality.
+
+### Deploy and update applications
+
+#### Deploy applications with Intune
+
+##### Microsoft Intune app lifecycle
+
+[Intune app lifecycle](../../images/msLearn/image-msLearn-intune-app-lifecycle.png)
+
+### Add apps to Intune
+
+You can add the following app types in Intune:
+
+- **Store app:** Apps that have been uploaded to either the Microsoft store, the iOS store, or the Android store are store apps. The provider of a store app maintains and provides updates to the app. You select the app in the store list and add it by using Intune as an available app for your users.
+
+- **Microsoft 365 apps:** This app type makes it easy for you to assign Microsoft 365 apps to devices you manage that run Windows or macOS. You can also install apps for the Microsoft Project Online desktop client and Microsoft Visio Pro, if you own licenses for them. The apps that you want are displayed as a single entry in the list of apps on the Intune console.
+
+- **Web link:** A web app is a client-server application. The server provides the web app, which includes the UI, content, and functionality. Additionally, modern web-hosting platforms commonly offer security, load balancing, and other benefits. A web app is separately maintained on the web. You use Microsoft Intune to point to this app type. You also assign the groups of users that can access this app.
+
+- **Built-in app:** The built-in app type makes it easy for you to assign curated managed apps, such as Microsoft 365 apps, to iOS and Android devices. You can assign specific apps for this app type, such as Excel, OneDrive, Outlook, Skype, and others. After you add an app, the app type is displayed as either Built-in iOS app or Built-in Android app. By using the built-in app type, you can choose which of these apps to publish to device users.
+
+- **Line-of-business (LOB) app:** An LOB app is one that you add from an app installation file. For example, to install an iOS LOB app, you add the application by selecting Line-of-business app as the App type in the Add app pane. You then select the app package file (extension .ipa), which is uploaded to Intune. LOB app supports apps for Windows, Android and iOS. The following extensions are supported:
+  - Windows: .msi, .appx, appxbundle, .msix and .msixbundle
+  - Android: .apk
+  - iOS: .ipa and .intunemac
+
+- **Windows app (Win32):** Building upon the existing support for line-of-business (LOB) apps and Microsoft Store apps, administrators can use Intune to deploy most of their organization’s existing Win32 line-of-business (LOB) applications to end users on Windows devices. Administrators can add, install, and uninstall applications for Windows users in various formats, such as MSIs, Setup.exe, or MSP. Intune evaluates requirement rules before downloading and installing, notifying end users of the status or reboot requirements using the Windows Action Center.
+
+### Manage Win32 apps with Intune
+
+Before the Win32 app can be deployed with Intune, it must be prepped. The following chart illustrates the steps for preparing the app.
+
+[Win32 app deployment preparation](../../images/msLearn/image-msLearn-intune-prepare-window-32-app.png)
+
+A sample command might look like this:
+
+```posh
+IntuneWinAppUtil -c c:\testapp\\v1.0 -s c:\testapp\v1.0\setup.exe -o c:\testappoutput\v1.0 -q
+```
+
+### Assign apps to company employees
+
+The following table lists the various options for assigning apps to users and devices:
+
+| **Option**                                                         | **Devices enrolled with Intune** | **Devices not enrolled with Intune** |
+|--------------------------------------------------------------------|----------------------------------|--------------------------------------|
+| Assign to users                                                    | Yes                              | Yes                                  |
+| Assign to devices                                                  | Yes                              | No                                   |
+| Assign wrapped apps or apps that incorporate the Intune SDK        | Yes                              | Yes                                  |
+| Assign apps as Available                                           | Yes                              | Yes                                  |
+| Assign apps as Required                                            | Yes                              | No                                   |
+| Uninstall apps                                                     | Yes                              | No                                   |
+| Receive app updates from Intune                                    | Yes                              | No                                   |
+| End users install available apps from the Company Portal app       | Yes                              | No                                   |
+| End users install available apps from the web-based Company Portal | Yes                              | Yes                                  |
